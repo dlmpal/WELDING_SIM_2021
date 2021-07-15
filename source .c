@@ -216,66 +216,58 @@ double  timestep( double weld_time , double v , double time, double sigma ,doubl
     return TEMP_A;
 }
 
-void diffusion3d(int Nz , int Nx , int Ny , int Nt , double grid[Nz][Nx][Ny], double dz ,  double dx , double dy , double *TEMP_A,double electrode_vel,double dt , double sigma ,double Q , double Ta , double h){
+void diffusion3d(int Nz , int Nx , int Ny , int Nt , double grid[Nz][Nx][Ny], double dz ,  double dx , double dy , double *TEMP_A,double electrode_vel,double dt , double sigma ,double Q , double Ta , double h) {
 
 
-    double weld_time = 40e-3/(electrode_vel);
-    double current_temp ;
+    double weld_time = 40e-3 / (electrode_vel);
+    double current_temp;
     current_temp = Ta;
 
     double grid_new[Nz][Nx][Ny];
 
-    FILE *grid_to_print , *paths;
-    paths = fopen("C:/numerical_data/welding_sim/paths.dat","wb");
-    char path1[] = "C:/Numerical_data/welding_sim/field_01";
-    char path2[] = "C:/Numerical_data/welding_sim/field_02";
-    char path3[] = "C:/Numerical_data/welding_sim/field_03";
-    char path4[] = "C:/Numerical_data/welding_sim/field_04";
-    char loc[] = {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F','G','J','K','L','Z','X','V','N','M','Q'};
-    int count = 0;
-    int snap = 10 ;
+    FILE *grid_to_print, *paths;
+    paths = fopen("C:/numerical_data/welding_sim/paths.dat", "wb");
+    char path[] = "C:/Numerical_data/welding_sim/field_00";
+    char loc1[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'J', 'K', 'L',
+                   'Z', 'X', 'V', 'N', 'M', 'Q'};
+    char loc2[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'J', 'K', 'L',
+                   'Z', 'X', 'V', 'N', 'M', 'Q'};
+    int count_1 = 0;
+    int count_2 = 0;
+    int snap = 100;
 
-    for(int t = 0 ; t <= Nt  ; t++) {
+    for (int t = 0; t <= Nt; t++) {
 
 
         TEMP_A[t] = current_temp;
-        current_temp = timestep(weld_time,electrode_vel,dt * t, sigma, h , Ta ,Q, Nz , Nx, Ny, grid, dz , dx, dy, dt, grid_new);
-        copy_matrix_3d(Nz,Nx, Ny, grid_new, grid);
+        current_temp = timestep(weld_time, electrode_vel, dt * t, sigma, h, Ta, Q, Nz, Nx, Ny, grid, dz, dx, dy, dt,
+                                grid_new);
+        copy_matrix_3d(Nz, Nx, Ny, grid_new, grid);
 
-        if(t%snap==0) {
-            if(count <= 25){
-                path1[36] = loc[count];
-                fprintf(paths,"%s\n",path1);
-                grid_to_print = fopen(path1, "wb");
+        if (t % snap == 0) {
+            path[36] = loc1[count_1];
+            path[37] = loc2[count_2];
+            fprintf(paths, "%s\n", path);
+            grid_to_print = fopen(path, "wb");
+            count_2++;
+            if (count_2 == 26) {
+                count_2 = 0;
+                count_1++;
             }
-            if(count <= 50 && count > 25){
-                path2[36] = loc[count-25];
-                fprintf(paths,"%s\n",path2);
-                grid_to_print = fopen(path2, "wb");
+
+            for (int i = 0; i < Nx; i++) {
+                for (int j = 0; j < Ny; j++) {
+                    fprintf(grid_to_print, "%lf ", grid[0][i][j]);
+                }
+                fprintf(grid_to_print, "\n");
             }
-            if(count <= 75 && count > 50){
-                path3[36] = loc[count-50];
-                fprintf(paths,"%s\n",path3);
-                grid_to_print = fopen(path3, "wb");
-            }
-            if(count <= 100 && count > 75){
-                path4[36] = loc[count-75];
-                fprintf(paths,"%s\n",path4);
-                grid_to_print = fopen(path4, "wb");
-            }
-            count++;
-//            for (int i = 0; i < Nx; i++) {
-//                for (int j = 0; j < Ny; j++) {
-//                    fprintf(grid_to_print, "%lf ", grid[0][i][j]);
-//                }
-//                fprintf(grid_to_print, "\n");
-//            }
-//            fclose(grid_to_print);
+            fclose(grid_to_print);
             printf("Time %lf -- T=%lf\n",t*dt,current_temp);
-
         }
 
+
+        free(grid_new);
     }
     fclose(paths);
-    //free(grid_new);
+
 }
